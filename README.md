@@ -1,5 +1,5 @@
 # Nullified Interceptions Analysis
-
+![image](https://github.com/kaimorales/NullifedINT/blob/main/mohomie.png)
 ## Overview
 This project analyzes nullified interceptions (interceptions negated by penalties) in the NFL from 2018 to 2023. The goal is to determine whether certain quarterbacks, particularly Patrick Mahomes, have a statistically significant number of nullified interceptions compared to their peers.
 
