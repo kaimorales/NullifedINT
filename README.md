@@ -1,45 +1,49 @@
+# Nullified Interceptions Analysis
+
+## Overview
+This project analyzes nullified interceptions (interceptions negated by penalties) in the NFL from 2018 to 2023. The goal is to determine whether certain quarterbacks, particularly Patrick Mahomes, have a statistically significant number of nullified interceptions compared to their peers.
+
+## Data Collection
+Data was obtained using the `nflfastR` package in R, which provides play-by-play data for all NFL games. The R script:
+- Extracts play-by-play data for seasons 2018–2023.
+- Identifies nullified interceptions by searching for relevant play descriptions.
+- Matches interceptions with starting quarterbacks when necessary.
+- Merges pass attempt data to normalize interception rates.
+- Outputs a cleaned dataset as `nullified_interceptions_with_attempts_2018_2023.csv`.
+
+## Analysis
+The dataset was analyzed using Python to identify statistical outliers and differences in nullified interception rates among quarterbacks. The analysis includes:
+- **Mann-Whitney U Test**: Checks if Mahomes' nullified interception rate is statistically different from other quarterbacks.
+- **Bootstrapping**: Estimates confidence intervals for nullified interception rates to determine if Mahomes is an outlier.
+- **Visualization**: A histogram compares Mahomes’ nullified interception rate against other quarterbacks.
+
+## Results
+- Patrick Mahomes was identified as an outlier in nullified interceptions.
+- Statistical tests were used to determine if Mahomes' rate significantly deviates from the league average.
+- The results provide insights into how often Mahomes benefits from nullified interceptions compared to other QBs.
+
 ## Project Structure
-# - get_nullified_interceptions.R  -> Pulls NFL data using R
-# - analyze_nullified_interceptions.py -> Analyzes the data in Python
-# - nullified_interceptions_with_attempts_2018_2023.csv -> Data file
+- `get_nullified_interceptions.R` – Collects and processes NFL play-by-play data.
+- `analyze_nullified_interceptions.py` – Performs statistical analysis on the dataset.
+- `nullified_interceptions_with_attempts_2018_2023.csv` – Processed dataset used for analysis.
 
-# R script: get_nullified_interceptions.R
-library(nflfastR)
-library(tidyverse)
+## Requirements
+### R Dependencies:
+- `nflfastR`
+- `tidyverse`
 
-# Define years we want to analyze
-years <- 2018:2023
+### Python Dependencies:
+- `pandas`
+- `numpy`
+- `scipy`
+- `matplotlib`
 
-# Load play-by-play (PBP) data
-pbp_data <- map_df(years, load_pbp)
+## Usage
+1. Run `get_nullified_interceptions.R` in R to generate the dataset.
+2. Run `analyze_nullified_interceptions.py` in Python to analyze the data and visualize results.
 
-# Identify the starting QB for each team in each game
-starting_qbs <- pbp_data %>%
-  filter(!is.na(passer_player_name)) %>%
-  group_by(game_id, posteam) %>%
-  summarise(starting_qb = first(passer_player_name), .groups = "drop")
+## Future Improvements
+- Expanding analysis to include the impact of nullified interceptions on game outcomes.
+- Comparing nullified interception rates across different eras of the NFL.
+- Refining methods to distinguish intentional penalties vs. incidental fouls leading to nullified interceptions.
 
-# Calculate pass attempts per QB per season
-pass_attempts <- pbp_data %>%
-  filter(!is.na(passer_player_name)) %>%
-  group_by(season, passer_player_name) %>%
-  summarise(pass_attempts = n(), .groups = "drop")
-
-# Filter for Nullified Interceptions (INTs negated by penalties)
-nullified_ints <- pbp_data %>%
-  filter(str_detect(desc, "INTERCEPTED"), penalty == 1) %>% 
-  select(season, game_id, week, posteam, defteam, passer_player_name, desc, penalty_team, penalty_type)
-
-# Join with the starting QB data to fill in missing values
-nullified_ints_fixed <- nullified_ints %>%
-  left_join(starting_qbs, by = c("game_id", "posteam")) %>%
-  mutate(passer_player_name = coalesce(passer_player_name, starting_qb)) %>%
-  select(-starting_qb)
-
-# Join with pass attempts data
-nullified_ints_fixed <- nullified_ints_fixed %>%
-  left_join(pass_attempts, by = c("season", "passer_player_name"))
-
-# Save the cleaned data to a CSV file
-write_csv(nullified_ints_fixed, "nullified_interceptions_with_attempts_2018_2023.csv")
-print("CSV file saved: nullified_interceptions_with_attempts_2018_2023.csv")
